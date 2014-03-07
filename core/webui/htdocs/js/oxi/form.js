@@ -725,3 +725,81 @@ OXI.FormButton = OXI.PageButton.extend({
 
     _lastItem: '' //avoid trailing commas
 });
+
+OXI.UploadButton = Ember.View.extend({
+	jsClassName:'OXI.PageButton',
+	templateName: "page-button",
+	tagName: 'button',
+	classNames: ['btn'],
+	parent: null,
+	
+	click: function(){
+		this.upload();
+	},
+	
+	upload: function(){
+		var certToSend = $('#' + this.parent.textArea.elementId).val();
+		var dataToSend = {'action' : 'upload_cert', 'rawData' : certToSend};
+		$.post(App.serverUrl, dataToSend, function(data, status, xhr){
+			alert(data.message);
+		});
+	},
+	_lastItem: ''
+});
+
+OXI.Upload = Ember.TextField.extend({
+	
+	jsClassName:'OXI.Upload',
+	classNameBindings:['btn_type'],
+	classNames: ['form-control'],
+	type: 'file',
+	textArea: OXI.TextArea.create(),
+	areaVisible: 0,
+	submitButton: null,
+	
+	init: function(){
+		this._super();
+		
+		if(this.submitButton){
+			var fieldDef = this.submitButton;
+			this.submitButton = this.createChildView(OXI.UploadButton.create({label:'test', parent:this}));
+		}
+	},	
+	
+	didInsertElement: function(){
+		var field = this.$();
+		field.textArea = this.textArea;
+		field[0].addEventListener('change', function(e){
+			var reader = new FileReader();
+			reader.textArea = $('#' + field.textArea.elementId);
+			reader.readAsText(e.target.files[0]);
+			reader.onload = function(e){
+				var dataURL = reader.result;
+				reader.textArea.val(dataURL);
+			};
+		});
+	},
+	
+	_lastItem: ''
+	
+});
+
+OXI.UploadContainer = OXI.FormFieldContainer.extend({
+    templateName: "upload-view",
+    jsClassName:'OXI.UploadContainer',
+	uploadField: '',
+	textArea: null,
+    init:function(){
+        //Ember.debug('OXI.CheckboxContainer :init '+this.fieldDef.label);
+        this._super();
+		this.uploadField = OXI.Upload.create(this.fieldDef);
+		this.uploadField.set('type', 'file');//naming issue in componentFactory
+		if(this.fieldDef['areaVisible'] == '1'){
+			this.textArea = this.uploadField.textArea;
+        }
+		this.setFieldView(this.uploadField);
+    },
+
+
+    _lastItem: '' //avoid trailing commas
+});
