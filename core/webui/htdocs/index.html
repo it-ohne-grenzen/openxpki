@@ -369,6 +369,14 @@
       <div {{bind-attr class=":alert view.msg_class"}}>{{view.message}}</div>
     </script>
     
+	<script type="text/x-handlebars" data-template-name="upload-view">
+	<label {{bind-attr for=view.fieldname}} class="col-lg-2 control-label">{{view.label}}</label>
+	  <div class="col-lg-9">
+		{{view view.FieldView}}
+		{{#if view.textArea}}<p><div>{{view view.textArea}} </div></p>{{/if}}
+		{{view view.FieldView.submitButton}}
+	  </div>
+	</script>
    
     
     <!-- Bootstrap core JavaScript
