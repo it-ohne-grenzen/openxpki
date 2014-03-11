@@ -740,9 +740,13 @@ OXI.UploadButton = Ember.View.extend({
 	upload: function(){
 		var certToSend = $('#' + this.parent.textArea.elementId).val();
 		var dataToSend = {'action' : 'upload_cert', 'rawData' : certToSend};
-		$.post(App.serverUrl, dataToSend, function(data, status, xhr){
-			alert(data.message);
-		});
+		if(certToSend){
+			$.post(App.serverUrl, dataToSend, function(data, status, xhr){
+				alert(data.message);
+			});
+		}else{
+			App.applicationAlert('Please chose a File to upload!');
+		}
 	},
 	_lastItem: ''
 });
@@ -756,26 +760,47 @@ OXI.Upload = Ember.TextField.extend({
 	textArea: OXI.TextArea.create(),
 	areaVisible: 0,
 	submitButton: null,
+	maxSize: 0, //maxSize in byte!
+	allowedFiles: null,
+	textAreaSize: null,
 	
 	init: function(){
 		this._super();
 		
 		if(this.submitButton){
 			var fieldDef = this.submitButton;
-			this.submitButton = this.createChildView(OXI.UploadButton.create({label:'test', parent:this}));
+			this.submitButton = this.createChildView(OXI.UploadButton.create({label:'upload', parent:this}));
 		}
 	},	
 	
 	didInsertElement: function(){
 		var field = this.$();
+		if(this.textAreaSize){
+			var area = this.textArea.$().css({"width" : this.textAreaSize[0].width, "height" : this.textAreaSize[1].height});
+		}
 		field.textArea = this.textArea;
+		field.maxSize = this.maxSize;
+		field.allowedFiles = this.allowedFiles;
 		field[0].addEventListener('change', function(e){
+			var tempExtension = e.target.value.split('.');
+			var extension = tempExtension[tempExtension.length-1];
+			if(field.allowedFiles && !field.allowedFiles.contains(extension)){
+				App.applicationAlert("This file extension is not allowed for upload. Allowed extensions are: "+ field.allowedFiles.toString());
+				return false;
+			}
 			var reader = new FileReader();
 			reader.textArea = $('#' + field.textArea.elementId);
+			reader.maxSize = field.maxSize;
 			reader.readAsText(e.target.files[0]);
 			reader.onload = function(e){
 				var dataURL = reader.result;
-				reader.textArea.val(dataURL);
+				if(reader.maxSize && reader.maxSize >= e.total){
+					reader.textArea.val(dataURL);//if maxSize is set and its valid
+				}else if(!reader.maxSize){
+					reader.textArea.val(dataURL);//if maxSize is not set
+				}else{
+					App.applicationAlert('Your file is too big to upload.');
+				}
 			};
 		});
 	},
