@@ -49,7 +49,8 @@ OXI.FormFieldFactory = OXI.ComponentFactory.create({
         checkbox:   'CheckboxContainer',
     	date :      'DateFieldContainer',
     	bool :      'CheckboxContainer',
-		upload :    'UploadContainer' 	
+		upload :    'UploadContainer',
+		radio :     'RadioContainer'
     }
 
 });

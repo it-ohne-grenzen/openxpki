@@ -643,6 +643,11 @@ OXI.PulldownContainer = OXI.FormFieldContainer.extend({
 
 OXI.Checkbox = Ember.Checkbox.extend(
 {
+	label: '',
+	
+	init: function(){
+		this._super();
+	},
     isChecked:function(){
         var checkbox = this.$();
         //we ask the DOM-element itself, not its jquery wrapper
@@ -681,9 +686,15 @@ OXI.TextArea = Ember.TextArea.extend(
 OXI.TextField = Ember.TextField.extend(
 {
     classNames: ['form-control'],
+	autoComplete: null,//source
     toggle:function(bShow){
         this.set('isVisible', bShow);
     },
+	didInsertElement: function(){
+		if(this.autoComplete){
+				$('#'+this.elementId).autocomplete({source: this.autoComplete.source});
+		}
+	},
     _lastItem: '' //avoid trailing commas
 }
 );
@@ -827,4 +838,29 @@ OXI.UploadContainer = OXI.FormFieldContainer.extend({
 
 
     _lastItem: '' //avoid trailing commas
+});
+
+OXI.RadioContainer = OXI.FormFieldContainer.extend({
+	templateName: "radio-view",
+	jsClassName: 'OXI.RadioContainer',
+	options: null,
+	multi: false,
+	checkBoxList: null, //should never be set by constructor
+	
+	init:function(){
+		this._super();
+		this.options = this.fieldDef.options;
+		if(this.fieldDef.multi){
+			this.multi = this.fieldDef.multi;
+			this.checkBoxList = new Array(this.options.length);
+			for(var i = 0; i < this.options.length; i++){
+				this.checkBoxList[i] = OXI.Checkbox.create();
+				this.checkBoxList[i].set('value', this.options[i].value);
+				this.checkBoxList[i].set('label', this.options[i].label);
+			}
+		}
+	},
+	
+	_lastItem: ''
+	
 });
