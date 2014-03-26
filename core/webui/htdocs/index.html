@@ -20,8 +20,8 @@
     <link href="css/bootstrap-combobox.css" rel="stylesheet">
     <!-- CSS for context menu --> 
     <link href="css/jquery.contextMenu.css" rel="stylesheet">
-    <!-- CSS for autocomplete menu --> 
-    <link href="css/jquery.ui.autocomplete.css" rel="stylesheet">
+    <!-- CSS for typeahead -->
+    <link href="css/typeahead.css" rel="stylesheet">
     <!-- Custom styles for this project -->
     <link href="css/oxi.css" rel="stylesheet">
     <link href="css/oxi-grid.css" rel="stylesheet">
@@ -371,13 +371,31 @@
       <div {{bind-attr class=":alert view.msg_class"}}>{{view.message}}</div>
     </script>
     
+    <script type="text/x-handlebars" data-template-name="radio-view">
+    <div class="col-lg-offset-2 col-lg-8" style="margin-bottom:4px;">
+    <div>
+    {{#if view.multi}}
+      {{#each checkBox in view.checkBoxList}}
+      <label>
+        {{view checkBox}} {{checkBox.label}}
+        </label>
+      {{/each}}
+    	{{else}}
+    		{{#each view.options}}
+    			<input type="radio" value="{{value}}">{{label}}</input>
+    		{{/each}}
+    	{{/if}}
+    </div>			
+    </div>	
+    </script>
+    
 	<script type="text/x-handlebars" data-template-name="upload-view">
-	<label {{bind-attr for=view.fieldname}} class="col-lg-2 control-label">{{view.label}}</label>
+	<label class="col-lg-2 control-label">{{view.label}}</label>
 	  <div class="col-lg-9">
 		{{view view.FieldView}}
 		{{#if view.textArea}}<p><div>{{view view.textArea}} </div></p>{{/if}}
-		{{view view.FieldView.submitButton}}
-	  </div>
+		<input type="hidden" name ="data" id="data">
+	</div>
 	</script>
    
     
@@ -396,6 +414,7 @@
     <script src="js/bootstrap.min.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/libs/handlebars-1.0.0.js"></script>
+    <script src="js/libs/typeahead.bundle.js"></script>
     <script type="text/javascript" >
       //Environment for ember:
     ENV = {

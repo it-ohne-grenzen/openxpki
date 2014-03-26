@@ -686,14 +686,31 @@ OXI.TextArea = Ember.TextArea.extend(
 OXI.TextField = Ember.TextField.extend(
 {
     classNames: ['form-control'],
-	autoComplete: null,//source
+	autoComplete: null,//source, value, url
     toggle:function(bShow){
         this.set('isVisible', bShow);
     },
 	didInsertElement: function(){
-		if(this.autoComplete){
-				$('#'+this.elementId).autocomplete({source: this.autoComplete.source});
-		}
+	if(this.autoComplete){
+		var mySource = new Bloodhound({
+			  datumTokenizer: function(d) { 
+			    return Bloodhound.tokenizers.whitespace(d.value); 
+			  },
+			  queryTokenizer: Bloodhound.tokenizers.whitespace,
+			  local: [],
+			  remote: ''
+
+			});
+		if(this.autoComplete.type == 'value' || this.autoComplete.type == 'source')
+			mySource.local = this.autoComplete.source;
+		if(this.autoComplete.type == 'url')
+			mySource.remote = this.autoComplete.source;
+		
+		mySource.initialize();
+
+		$('#'+this.elementId).typeahead(null, {source: mySource.ttAdapter()});
+
+	}
 	},
     _lastItem: '' //avoid trailing commas
 }
@@ -770,18 +787,13 @@ OXI.Upload = Ember.TextField.extend({
 	type: 'file',
 	textArea: OXI.TextArea.create(),
 	areaVisible: 0,
-	submitButton: null,
+	uploadButton: null,
 	maxSize: 0, //maxSize in byte!
 	allowedFiles: null,
 	textAreaSize: null,
 	
 	init: function(){
 		this._super();
-		
-		if(this.submitButton){
-			var fieldDef = this.submitButton;
-			this.submitButton = this.createChildView(OXI.UploadButton.create({label:'upload', parent:this}));
-		}
 	},	
 	
 	didInsertElement: function(){
@@ -792,6 +804,9 @@ OXI.Upload = Ember.TextField.extend({
 		field.textArea = this.textArea;
 		field.maxSize = this.maxSize;
 		field.allowedFiles = this.allowedFiles;
+		$('#' + field.textArea.elementId).change(function(){
+			$('#data').val($(this).val());
+		});
 		field[0].addEventListener('change', function(e){
 			var tempExtension = e.target.value.split('.');
 			var extension = tempExtension[tempExtension.length-1];
@@ -801,10 +816,12 @@ OXI.Upload = Ember.TextField.extend({
 			}
 			var reader = new FileReader();
 			reader.textArea = $('#' + field.textArea.elementId);
+			reader.textArea.tooltip({content: 'Your upload data.'});
 			reader.maxSize = field.maxSize;
-			reader.readAsText(e.target.files[0]);
+			reader.readAsDataURL(e.target.files[0]);
 			reader.onload = function(e){
 				var dataURL = reader.result;
+				$('#data').val(dataURL);
 				if(reader.maxSize && reader.maxSize >= e.total){
 					reader.textArea.val(dataURL);//if maxSize is set and its valid
 				}else if(!reader.maxSize){
@@ -824,12 +841,14 @@ OXI.UploadContainer = OXI.FormFieldContainer.extend({
     templateName: "upload-view",
     jsClassName:'OXI.UploadContainer',
 	uploadField: '',
+	uploadButton: null,
 	textArea: null,
     init:function(){
         //Ember.debug('OXI.CheckboxContainer :init '+this.fieldDef.label);
         this._super();
 		this.uploadField = OXI.Upload.create(this.fieldDef);
 		this.uploadField.set('type', 'file');//naming issue in componentFactory
+		this.uploadField.set('name', 'file');
 		if(this.fieldDef['areaVisible'] == '1'){
 			this.textArea = this.uploadField.textArea;
         }
